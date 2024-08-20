@@ -5,19 +5,6 @@ import matplotlib.pyplot as plt
 from scipy.stats import chi2_contingency
 dataset = pd.read_parquet('challenge_campus_biomedico_2024.parquet')
 
-def drop_correlated_columns(dataset):
-    """
-    Drops columns from the dataset that are considered to be correlated 
-    or redundant, to simplify the dataset.
-
-    Parameters:
-    dataset (DataFrame): The DataFrame containing the dataset
-
-    Returns:
-    DataFrame: The DataFrame with the specified columns removed.
-    """
-    dataset.drop(columns=['codice_tipologia_professionista_sanitario','provincia_residenza', 'provincia_erogazione', 'asl_residenza', 'comune_residenza', 'struttura_erogazione','regione_erogazione','regione_residenza', 'asl_erogazione','codice_tipologia_struttura_erogazione'], inplace=True)
-    return dataset
 
 def drop_colomun_id_professionista_sanitario(dataset):
     """
@@ -95,11 +82,22 @@ def duration_of_visit(dataset):
     # Calculate the duration of the visit in minutes
     dataset['duration_of_visit'] = (dataset['ora_fine_erogazione'] - dataset['ora_inizio_erogazione']).dt.total_seconds() / 60
     
-    dataset.drop(columns=['ora_inizio_erogazione', 'ora_fine_erogazione'], inplace=True)
-
     return dataset
 
-def età(dataset):
+def drop_columns_inio_e_fine_prestazione(dataset):
+    """
+    Drops columns from the dataset that are not needed for the analysis.
+
+    Parameters:
+    dataset (DataFrame): The DataFrame containing the dataset.
+
+    Returns:
+    DataFrame: The DataFrame with the specified columns removed.
+    """
+    dataset.drop(columns=['ora_inizio_erogazione', 'ora_fine_erogazione'], inplace=True)
+    return dataset
+
+def calculate_age(dataset):
     """
     Calculates the patient's age in years.
 
@@ -198,7 +196,7 @@ def eliminate_highly_correlated_columns(df, columns_to_exclude):
     df.drop(columns=columns_to_exclude, inplace=True)
     return df
 
-# Function to drop specified correlated columns from the dataset
+'''# Function to drop specified correlated columns from the dataset
 def drop_correlated_columns(dataset):
     """
     Drops columns from the dataset that are considered to be correlated 
@@ -212,3 +210,25 @@ def drop_correlated_columns(dataset):
     """
     dataset.drop(columns=['codice_tipologia_professionista_sanitario', 'provincia_residenza', 'provincia_erogazione', 'asl_residenza', 'comune_residenza', 'struttura_erogazione', 'regione_erogazione', 'regione_residenza', 'asl_erogazione', 'codice_tipologia_struttura_erogazione'], inplace=True)
     return dataset
+'''
+#dataset = duration_of_visit(dataset)
+''''categorical_columns = ['codice_tipologia_professionista_sanitario', 'provincia_residenza', 'provincia_erogazione', 'asl_residenza', 'comune_residenza', 'struttura_erogazione', 'regione_erogazione', 'regione_residenza', 'asl_erogazione', 'codice_tipologia_struttura_erogazione']
+
+# Compute the correlation matrix
+correlation_matrix = compute_correlation_matrix(dataset, categorical_columns)
+
+# Plot and save the correlation matrix
+plot_correlation_matrix(correlation_matrix, "correlation_matrix.png")
+
+# Remove columns that are highly correlated based on a threshold
+high_correlation_threshold = 0.9
+columns_to_exclude = [col for col in correlation_matrix.columns if any(correlation_matrix[col].astype(float) > high_correlation_threshold)]
+dataset = eliminate_highly_correlated_columns(dataset, columns_to_exclude)
+
+# Proceed with other preprocessing operations
+dataset = drop_colomun_id_professionista_sanitario(dataset)
+dataset = drop_visit_cancellation(dataset)
+dataset = delete_column_date_null(dataset)
+dataset = drop_duplicate(dataset)
+dataset = duration_of_visit(dataset)
+dataset = calculate_age(dataset)'''
