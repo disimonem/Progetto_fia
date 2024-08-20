@@ -196,21 +196,6 @@ def eliminate_highly_correlated_columns(df, columns_to_exclude):
     df.drop(columns=columns_to_exclude, inplace=True)
     return df
 
-'''# Function to drop specified correlated columns from the dataset
-def drop_correlated_columns(dataset):
-    """
-    Drops columns from the dataset that are considered to be correlated 
-    or redundant, to simplify the dataset.
-
-    Args:
-        dataset: The DataFrame containing the dataset.
-
-    Returns:
-        DataFrame with the specified columns removed.
-    """
-    dataset.drop(columns=['codice_tipologia_professionista_sanitario', 'provincia_residenza', 'provincia_erogazione', 'asl_residenza', 'comune_residenza', 'struttura_erogazione', 'regione_erogazione', 'regione_residenza', 'asl_erogazione', 'codice_tipologia_struttura_erogazione'], inplace=True)
-    return dataset
-'''
 #dataset = duration_of_visit(dataset)
 ''''categorical_columns = ['codice_tipologia_professionista_sanitario', 'provincia_residenza', 'provincia_erogazione', 'asl_residenza', 'comune_residenza', 'struttura_erogazione', 'regione_erogazione', 'regione_residenza', 'asl_erogazione', 'codice_tipologia_struttura_erogazione']
 
