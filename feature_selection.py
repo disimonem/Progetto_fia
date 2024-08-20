@@ -197,23 +197,28 @@ def eliminate_highly_correlated_columns(df, columns_to_exclude):
     return df
 
 #dataset = duration_of_visit(dataset)
-''''categorical_columns = ['codice_tipologia_professionista_sanitario', 'provincia_residenza', 'provincia_erogazione', 'asl_residenza', 'comune_residenza', 'struttura_erogazione', 'regione_erogazione', 'regione_residenza', 'asl_erogazione', 'codice_tipologia_struttura_erogazione']
+def dataset_preprocessing(dataset):
+    categorical_columns = ['codice_tipologia_professionista_sanitario', 'provincia_residenza', 'provincia_erogazione', 'asl_residenza', 'comune_residenza', 'struttura_erogazione', 'regione_erogazione', 'regione_residenza', 'asl_erogazione', 'codice_tipologia_struttura_erogazione']
 
-# Compute the correlation matrix
-correlation_matrix = compute_correlation_matrix(dataset, categorical_columns)
+    # Compute the correlation matrix
+    correlation_matrix = compute_correlation_matrix(dataset, categorical_columns)
 
-# Plot and save the correlation matrix
-plot_correlation_matrix(correlation_matrix, "correlation_matrix.png")
+    # Plot and save the correlation matrix
+    plot_correlation_matrix(correlation_matrix, "correlation_matrix.png")
 
-# Remove columns that are highly correlated based on a threshold
-high_correlation_threshold = 0.9
-columns_to_exclude = [col for col in correlation_matrix.columns if any(correlation_matrix[col].astype(float) > high_correlation_threshold)]
-dataset = eliminate_highly_correlated_columns(dataset, columns_to_exclude)
+    # Remove columns that are highly correlated based on a threshold
+    high_correlation_threshold = 0.9
+    columns_to_exclude = [col for col in correlation_matrix.columns if any(correlation_matrix[col].astype(float) > high_correlation_threshold)]
+    dataset = eliminate_highly_correlated_columns(dataset, columns_to_exclude)
 
-# Proceed with other preprocessing operations
-dataset = drop_colomun_id_professionista_sanitario(dataset)
-dataset = drop_visit_cancellation(dataset)
-dataset = delete_column_date_null(dataset)
-dataset = drop_duplicate(dataset)
-dataset = duration_of_visit(dataset)
-dataset = calculate_age(dataset)'''
+    # Proceed with other preprocessing operations
+    dataset = drop_colomun_id_professionista_sanitario(dataset)
+    dataset = drop_visit_cancellation(dataset)
+    dataset = delete_column_date_null(dataset)
+    dataset = drop_duplicate(dataset)
+    dataset = duration_of_visit(dataset)
+    dataset = calculate_age(dataset)
+    dataset = drop_columns_inio_e_fine_prestazione(dataset)
+    return dataset
+
+dataset = dataset_preprocessing(dataset)
