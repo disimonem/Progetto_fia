@@ -220,7 +220,60 @@ def quadrimesters(dataset):
     dataset['quadrimestre']= dataset['data_erogazione'].dt.quarter
     return dataset
 
-# Preprocess the dataset
+def teleassistenze_per_quadrimestre(dataset):
+    """
+    Calculates the number of teleassistenze for each quadrimester and year.
+
+    Parameters:
+    dataset (DataFrame): The DataFrame containing the dataset.
+
+    Returns:
+    DataFrame: The DataFrame with the number of teleassistenze for each quadrimester and year.
+    """
+    teleassistenze = dataset[dataset['tipologia_servizio'] == 'Teleassistenza']
+    if not teleassistenze.empty:
+        teleassistenze_per_quadrimestre = teleassistenze.groupby(['quadrimestre', 'anno']).size().reset_index(name='teleassistenze')
+    return teleassistenze_per_quadrimestre
+
+def incremento_per_quadrimestre(dataset):
+
+    """
+    Calculates the incremento of teleassistenze for each quadrimester and year.
+
+    Parameters:
+    dataset (DataFrame): The DataFrame containing the dataset.
+
+    Returns:
+    DataFrame: The DataFrame with the incremento of teleassistenze for each quadrimester and year.
+
+    """
+    results=[]
+
+    quadrimestri = teleassistenze_per_quadrimestre['quadrimestre'].unique()
+    years = teleassistenze_per_quadrimestre['anno'].unique()
+
+    for year in years[:-1]:
+        for quadrimestre in quadrimestri:
+            current_year_data = teleassistenze_per_quadrimestre[(teleassistenze_per_quadrimestre['anno']==year) & (teleassistenze_per_quadrimestre['quadrimestre']==quadrimestre)]
+            next_year = year + 1
+            next_year_data = teleassistenze_per_quadrimestre[(teleassistenze_per_quadrimestre['anno'] == next_year) & (teleassistenze_per_quadrimestre['quadrimestre'] == quadrimestre)]
+
+    if not current_year_data.empty and not next_year_data.empty:
+      current_value = current_year_data['teleassistenze'].values[0]
+      next_value = next_year_data['teleassistenze'].values[0]
+
+      variazione = next_value - current_value 
+      results.append ({
+          'anno_iniziale' : year,
+          'anno_finale' : next_year,
+          'quadrimestre' : quadrimestre,
+          'variazione' : variazione
+      })
+
+    results_df = pd.DataFrame(results)
+    return results_df
+
+# Preprocess the dataset    
 dataset = dataset_preprocessing(dataset)
 
 '''# Filter the dataset for the year 2019 and quadrimester 1
