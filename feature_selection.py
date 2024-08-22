@@ -247,8 +247,6 @@ def incremento_per_quadrimestre(dataset):
     DataFrame: The DataFrame with the incremento of teleassistenze for each quadrimester and year.
 
     """
-    results=[]
-
     quadrimestri = teleassistenze_per_quadrimestre['quadrimestre'].unique()
     years = teleassistenze_per_quadrimestre['anno'].unique()
 
@@ -262,16 +260,11 @@ def incremento_per_quadrimestre(dataset):
       current_value = current_year_data['teleassistenze'].values[0]
       next_value = next_year_data['teleassistenze'].values[0]
 
-      variazione = next_value - current_value 
-      results.append ({
-          'anno_iniziale' : year,
-          'anno_finale' : next_year,
-          'quadrimestre' : quadrimestre,
-          'variazione' : variazione
-      })
+      incremento = next_value - current_value 
+    
+    dataset['incremento'] = incremento
 
-    results_df = pd.DataFrame(results)
-    return results_df
+    return dataset
 
 # Preprocess the dataset    
 dataset = dataset_preprocessing(dataset)
