@@ -205,5 +205,29 @@ def dataset_preprocessing(dataset):
     
     return dataset
 
+def quadrimesters(dataset):
+    """
+    Calculates the quadrimester of the year for each visit.
+
+    Parameters:
+    dataset (DataFrame): The DataFrame containing the dataset.
+
+    Returns:
+    DataFrame: The DataFrame with the 'quadrimester' column added.
+    """
+    dataset['data_erogazione'] = pd.to_datetime(dataset['data_erogazione'], utc=True, errors='coerce')
+    dataset['anno']= dataset['data_erogazione'].dt.year
+    dataset['quadrimestre']= dataset['data_erogazione'].dt.quarter
+    return dataset
+
 # Preprocess the dataset
 dataset = dataset_preprocessing(dataset)
+
+'''# Filter the dataset for the year 2019 and quadrimester 1
+filtered_dataset = dataset[(dataset['anno'] == 2019) & (dataset['quadrimestre'] == 1) &(dataset['tipologia_servizio'] == 'Teleassistenza')]
+
+# Count the number of rows in the filtered dataset
+count_filtered = filtered_dataset.shape[0]
+
+# Display the count
+print(f"Number of rows for the year 2019 and quadrimester 1: {count_filtered}")'''
