@@ -220,6 +220,7 @@ def quadrimesters(dataset):
     dataset['quadrimestre']= dataset['data_erogazione'].dt.quarter
     return dataset
 
+'''
 def teleassistenze_per_quadrimestre(dataset):
     """
     Calculates the number of teleassistenze for each quadrimester and year.
@@ -234,6 +235,8 @@ def teleassistenze_per_quadrimestre(dataset):
     if not teleassistenze.empty:
         teleassistenze_per_quadrimestre = teleassistenze.groupby(['quadrimestre', 'anno']).size().reset_index(name='teleassistenze')
     return teleassistenze_per_quadrimestre
+'''
+'''
 
 def incremento_per_quadrimestre(dataset):
 
@@ -265,6 +268,23 @@ def incremento_per_quadrimestre(dataset):
     dataset['incremento'] = incremento
 
     return dataset
+    '''
+def incremento_per_quadrimestre(dataset):
+    """
+    Calculates the incremento of teleassistenze for each quadrimester and year
+
+    Parameters:
+    dataset (DataFrame): The DataFrame containing the dataset
+
+    Returns:
+    DataFrame: The DataFrame with the incremento of teleassistenze for each quadrimester and year
+    """
+    conteggio_per_quadrimestre = dataset.pivot_table(index='anno', columns='quadrimestre', values='id_prenotazione', aggfunc='count')
+    incremento_per_quadrimestre = conteggio_per_quadrimestre.pct_change() * 100
+    dataset = dataset.merge(incremento_per_quadrimestre.stack().reset_index(name='incremento'), on=['anno', 'quadrimestre'], how='left')
+    dataset['incremento'] = dataset['incremento'].fillna(0)
+    return dataset
+
 
 # Preprocess the dataset    
 dataset = dataset_preprocessing(dataset)
