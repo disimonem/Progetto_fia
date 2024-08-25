@@ -121,12 +121,12 @@ def cramer_v(x, y):
     min_dim = min(contingency.shape) - 1
     return np.sqrt(chi2 / (n * min_dim))
 
-def compute_correlation_matrix(df, columns):
+def compute_correlation_matrix(dataset, columns):
     """
     Computes the correlation matrix for categorical columns.
 
     Parameters:
-    df (DataFrame): The DataFrame containing the dataset.
+    dataset (DataFrame): The DataFrame containing the dataset.
     columns (list): List of categorical columns to compute the correlation matrix for.
 
     Returns:
@@ -136,7 +136,7 @@ def compute_correlation_matrix(df, columns):
     for col1 in columns:
         for col2 in columns:
             if col1 != col2:
-                correlations.loc[col1, col2] = cramer_v(df[col1], df[col2])
+                correlations.loc[col1, col2] = cramer_v(dataset[col1], dataset[col2])
             else:
                 correlations.loc[col1, col2] = 1.0
 
@@ -161,20 +161,20 @@ def plot_correlation_matrix(correlations, filename):
     plt.tight_layout()
     plt.savefig(filename)
 
-def eliminate_highly_correlated_columns(df, columns_to_exclude):
+def eliminate_highly_correlated_columns(dataset, columns_to_exclude):
     """
     Eliminates columns that are highly correlated.
 
     Parameters:
-    df (DataFrame): The DataFrame containing the dataset.
+    dataset (DataFrame): The DataFrame containing the dataset.
     columns_to_exclude (list): List of columns to exclude.
 
     Returns:
     DataFrame: The DataFrame with highly correlated columns removed.
     """
     print("\n\n\n this is the columns to exclude", columns_to_exclude)
-    df.drop(columns=columns_to_exclude, inplace=True)
-    return df
+    dataset.drop(columns=columns_to_exclude, inplace=True)
+    return dataset
 
 def dataset_preprocessing(dataset):
     """
@@ -202,6 +202,8 @@ def dataset_preprocessing(dataset):
     dataset = duration_of_visit(dataset)
     dataset = calculate_age(dataset)
     dataset = drop_columns_inio_e_fine_prestazione(dataset)
+    dataset = quadrimesters(dataset)
+    dataset = incremento_per_quadrimestre(dataset)
     
     return dataset
 
@@ -252,3 +254,27 @@ def incremento_per_quadrimestre(dataset):
 # Preprocess the dataset    
 dataset = dataset_preprocessing(dataset)
 
+def label(dataset):
+    """
+    Calcola le etichette per l'incremento percentuale delle teleassistenze.
+
+    Parameters:
+    dataset (DataFrame): Il DataFrame contenente il dataset.
+
+    Returns:
+    DataFrame: Il DataFrame con la colonna 'label' aggiunta.
+    """
+
+    # Definire i limiti degli intervalli per il calcolo delle etichette
+    bins = [-float('inf'), -60, -30, 0, 30, 60, float('inf')]
+
+    # Definire le etichette per ciascun intervallo
+    labels = ['grande decremento', 'decremento medio', 'piccolo decremento', 
+            'piccolo incremento', 'incremento medio', 'grande incremento']
+
+    # Creare la colonna 'label' usando pd.cut()
+    dataset['label'] = pd.cut(dataset['incremento_percentuale'], bins=bins, labels=labels)
+
+    # Visualizzare il DataFrame con la nuova colonna 'label'
+    print(dataset)
+    return dataset
