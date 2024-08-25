@@ -279,10 +279,26 @@ def incremento_per_quadrimestre(dataset):
     Returns:
     DataFrame: The DataFrame with the incremento of teleassistenze for each quadrimester and year
     """
-    conteggio_per_quadrimestre = dataset.pivot_table(index='anno', columns='quadrimestre', values='id_prenotazione', aggfunc='count')
-    incremento_per_quadrimestre = conteggio_per_quadrimestre.pct_change() * 100
-    dataset = dataset.merge(incremento_per_quadrimestre.stack().reset_index(name='incremento'), on=['anno', 'quadrimestre'], how='left')
-    dataset['incremento'] = dataset['incremento'].fillna(0)
+    
+    # Step 1: Calcolo della somma delle teleassistenze per quadrimestre e anno
+    # Raggruppiamo per anno e quadrimestre, sommando il numero di teleassistenze
+    conteggio_per_quadrimestre = dataset[dataset['tipologia_servizio'] == 'Teleassistenza'].groupby(['anno', 'quadrimestre'])['id_prenotazione'].count().reset_index(name='numero_teleassistenze')
+    # Step 2: Calcolo della differenza rispetto allo stesso quadrimestre dell'anno precedente
+    # Raggruppiamo per quadrimestre e calcoliamo la differenza con l'anno precedente
+    conteggio_per_quadrimestre['differenza'] = conteggio_per_quadrimestre.groupby('quadrimestre')['numero_teleassistenze'].diff()
+
+    # Step 3: Calcolo dell'incremento percentuale rispetto allo stesso quadrimestre dell'anno precedente
+    conteggio_per_quadrimestre['incremento_percentuale'] = (conteggio_per_quadrimestre['differenza'] / 
+                                                        conteggio_per_quadrimestre.groupby('quadrimestre')['numero_teleassistenze'].shift(1)) * 100
+
+    # Step 4: Gestione dei valori nulli
+    # Se non c'è un anno precedente (es. il primo anno per quel quadrimestre), l'incremento sarà impostato a 0
+    conteggio_per_quadrimestre['incremento_percentuale'] = conteggio_per_quadrimestre['incremento_percentuale'].fillna(0)
+
+    # Step 5: Merge con il dataset originale per aggiungere l'incremento
+    dataset = dataset.merge(conteggio_per_quadrimestre[['anno', 'quadrimestre', 'differenza', 'incremento_percentuale']], 
+                        on=['anno', 'quadrimestre'], 
+                        how='left')
     return dataset
 
 
