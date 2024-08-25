@@ -286,9 +286,11 @@ def incremento_per_quadrimestre(dataset):
     # Step 2: Calcolo della differenza rispetto allo stesso quadrimestre dell'anno precedente
     # Raggruppiamo per quadrimestre e calcoliamo la differenza con l'anno precedente
     conteggio_per_quadrimestre['incremento'] = conteggio_per_quadrimestre.groupby('quadrimestre')['numero_teleassistenze'].diff()
+    conteggio_per_quadrimestre['incremento'] = conteggio_per_quadrimestre['incremento'].fillna(0)
+    conteggio_per_quadrimestre['incremento_percentuale'] = (conteggio_per_quadrimestre['incremento'] / conteggio_per_quadrimestre['numero_teleassistenze']) * 100
 
     # Step 3: Merge con il dataset originale per aggiungere l'incremento
-    dataset = dataset.merge(conteggio_per_quadrimestre[['anno', 'quadrimestre', 'incremento']], 
+    dataset = dataset.merge(conteggio_per_quadrimestre[['anno', 'quadrimestre', 'incremento', 'incremento_percentuale']], 
                         on=['anno', 'quadrimestre'], 
                         how='left')
     return dataset
