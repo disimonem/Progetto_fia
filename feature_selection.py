@@ -220,55 +220,8 @@ def quadrimesters(dataset):
     dataset['quadrimestre']= dataset['data_erogazione'].dt.quarter
     return dataset
 
-'''
-def teleassistenze_per_quadrimestre(dataset):
-    """
-    Calculates the number of teleassistenze for each quadrimester and year.
 
-    Parameters:
-    dataset (DataFrame): The DataFrame containing the dataset.
 
-    Returns:
-    DataFrame: The DataFrame with the number of teleassistenze for each quadrimester and year.
-    """
-    teleassistenze = dataset[dataset['tipologia_servizio'] == 'Teleassistenza']
-    if not teleassistenze.empty:
-        teleassistenze_per_quadrimestre = teleassistenze.groupby(['quadrimestre', 'anno']).size().reset_index(name='teleassistenze')
-    return teleassistenze_per_quadrimestre
-'''
-'''
-
-def incremento_per_quadrimestre(dataset):
-
-    """
-    Calculates the incremento of teleassistenze for each quadrimester and year.
-
-    Parameters:
-    dataset (DataFrame): The DataFrame containing the dataset.
-
-    Returns:
-    DataFrame: The DataFrame with the incremento of teleassistenze for each quadrimester and year.
-
-    """
-    quadrimestri = teleassistenze_per_quadrimestre['quadrimestre'].unique()
-    years = teleassistenze_per_quadrimestre['anno'].unique()
-
-    for year in years[:-1]:
-        for quadrimestre in quadrimestri:
-            current_year_data = teleassistenze_per_quadrimestre[(teleassistenze_per_quadrimestre['anno']==year) & (teleassistenze_per_quadrimestre['quadrimestre']==quadrimestre)]
-            next_year = year + 1
-            next_year_data = teleassistenze_per_quadrimestre[(teleassistenze_per_quadrimestre['anno'] == next_year) & (teleassistenze_per_quadrimestre['quadrimestre'] == quadrimestre)]
-
-    if not current_year_data.empty and not next_year_data.empty:
-      current_value = current_year_data['teleassistenze'].values[0]
-      next_value = next_year_data['teleassistenze'].values[0]
-
-      incremento = next_value - current_value 
-    
-    dataset['incremento'] = incremento
-
-    return dataset
-    '''
 def incremento_per_quadrimestre(dataset):
     """
     Calculates the incremento of teleassistenze for each quadrimester and year
@@ -299,11 +252,3 @@ def incremento_per_quadrimestre(dataset):
 # Preprocess the dataset    
 dataset = dataset_preprocessing(dataset)
 
-'''# Filter the dataset for the year 2019 and quadrimester 1
-filtered_dataset = dataset[(dataset['anno'] == 2019) & (dataset['quadrimestre'] == 1) &(dataset['tipologia_servizio'] == 'Teleassistenza')]
-
-# Count the number of rows in the filtered dataset
-count_filtered = filtered_dataset.shape[0]
-
-# Display the count
-print(f"Number of rows for the year 2019 and quadrimester 1: {count_filtered}")'''
