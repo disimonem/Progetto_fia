@@ -140,7 +140,7 @@ def compute_correlation_matrix(dataset, columns):
             else:
                 correlations.loc[col1, col2] = 1.0
 
-    print("\n\n\n this is the correlation matrix", correlations)
+    #print("\n\n\n this is the correlation matrix", correlations)
     return correlations
 
 def plot_correlation_matrix(correlations, filename):
@@ -172,7 +172,7 @@ def eliminate_highly_correlated_columns(dataset, columns_to_exclude):
     Returns:
     DataFrame: The DataFrame with highly correlated columns removed.
     """
-    print("\n\n\n this is the columns to exclude", columns_to_exclude)
+    #print("\n\n\n this is the columns to exclude", columns_to_exclude)
     dataset.drop(columns=columns_to_exclude, inplace=True)
     return dataset
 
@@ -205,6 +205,8 @@ def dataset_preprocessing(dataset):
     dataset = quadrimesters(dataset)
     dataset = incremento_per_quadrimestre(dataset)
     dataset = label(dataset)
+    drop_columns(dataset)
+
     
     return dataset
 
@@ -250,6 +252,8 @@ def incremento_per_quadrimestre(dataset):
     dataset = dataset.merge(conteggio_per_quadrimestre[['anno', 'quadrimestre', 'incremento', 'incremento_percentuale']], 
                         on=['anno', 'quadrimestre'], 
                         how='left')
+    dataset.drop(columns='incremento', inplace=True)
+
     return dataset
 
 
@@ -280,9 +284,61 @@ def label(dataset):
     dataset.loc[dataset['incremento_percentuale'] == 0, 'label'] = 'nessun incremento'
 
     # Visualizzare il DataFrame con la nuova colonna 'label'
-    print(dataset)
-    print("\n\n\n this is the label", dataset['label'])
     return dataset
 
+def drop_columns(dataset):
+    """
+    Drops columns that are not needed for the analysis.
+
+    Parameters:
+    dataset (DataFrame): The DataFrame containing the dataset.
+
+    Returns:
+    DataFrame: The DataFrame with unnecessary columns removed.
+    """
+    columns_to_drop = ['id_prenotazione', 'id_paziente','data_contaatto']
+    dataset.drop(columns=columns_to_drop, inplace=True)
+    return dataset
+
+def get_dummies(dataset,threshold=0.01):
+    categories=['sesso','tipologia_servizio', 'data_contatto', 'codice_provincia_erogazione', 'codice_struttura_erogazione','tipologia_struttura_erogazione']
+    for column in categories:
+        # Calcolare la frequenza delle categorie
+        counts = dataset[column].value_counts(normalize=True)
+        # Selezionare solo le categorie con frequenza sopra il threshold
+        to_keep = counts[counts > threshold].index
+        # Sostituire le categorie meno frequenti con 'Other'
+        dataset[column] = dataset[column].apply(lambda x: x if x in to_keep else 'Other')
+    
+    # Applicare One-Hot Encoding con le categorie filtrate
+    dataset = pd.get_dummies(dataset, columns=categories, drop_first=True)
+    return dataset
+
+def fill_duration_of_visit(dataset):
+    """
+    Fills missing values in the 'duration_of_visit' column with the median value.
+
+    Parameters:
+    dataset (DataFrame): The DataFrame containing the dataset.
+
+    Returns:
+    DataFrame: The DataFrame with missing values filled in the 'duration_of_visit' column.
+    """
+    mean_duration = dataset['duration_of_visit'].mean()
+    dataset['duration_of_visit'].fillna(mean_duration, inplace=True)
+    return dataset
+
+def drop_forse(dataset):
+    """
+    Drops the 'forse' column from the dataset.
+
+    Parameters:
+    dataset (DataFrame): The DataFrame containing the dataset.
+
+    Returns:
+    DataFrame: The DataFrame with the something column removed.
+    """
+    dataset.drop(columns=['codice_asl_residenza','descrizione_attivita', 'codice_provincia_residenza', 'codice_comune_residenza'], inplace=True)
+    return dataset
 # Preprocess the dataset
 dataset = dataset_preprocessing(dataset)
