@@ -71,6 +71,12 @@ def drop_visit_cancellation(dataset):
     dataset = dataset[pd.isna(dataset['data_disdetta'])]
     return dataset
 
+def fill_duration_of_visit(dataset):
+    dataset['duration_of_visit'] = dataset['duration_of_visit'].fiilna(dataset['duration_of_visit'].mean())
+    return dataset
+
+
+    
 def data_Cleaning(dataset,comune_to_codice):
     dataset=drop_duplicate(dataset)
     dataset=drop_visit_cancellation(dataset)
