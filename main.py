@@ -1,5 +1,6 @@
 import FeatureSelection
 import DataCleaner
+import FeatureExtractor
 
 def main():
     dataset_path = 'challenge_campus_biomedico_2024.parquet'
@@ -9,10 +10,14 @@ def main():
     data_cleaner.riempimento_codice_provincia()
     dataset = data_cleaner.dataset
     feature_selection = FeatureSelection.FeatureSelection(dataset)
-    feature_selection.duration_of_visit()
-    feature_selection.drop_columns_inizio_e_fine_prestazione()
-    feature_selection.calculate_age()
-    feature_selection.dataset
+    feature_selection.compute_correlation_matrix()
+    feature_selection.eliminate_highly_correlated_columns()
+    feature_selection.plot_corrrelation_matrix()
+    extractor = FeatureExtractor.FeatureExtractor(dataset)
+    df_with_features = extractor.extract_features(dataset)
+    print(df_with_features.head())
+    
+    
 
 if __name__ == '__main__':
     main()

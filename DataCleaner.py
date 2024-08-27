@@ -64,7 +64,7 @@ class DataCleaner():
                 cleaned dataset         
     '''
     def riempimento_codice_provincia_erogazione(self):
-        self.dataset['provincia_residenza_upper']= self.dataset['provicia_erogazione'].str.upper()
+        self.dataset['provincia_residenza_upper']= self.dataset['provincia_erogazione'].str.upper()
         mask = self.dataset['codice_provincia_erogazione'].isnull()
         self.dataset.loc[mask, 'codice_provincia_erogazione'] = self.dataset.loc[mask, 'provincia_residenza_upper'].map(self.comune_to_codice)
         self.dataset.drop(columns = ['provincia_residenza_upper'], inplace  = True)
@@ -126,6 +126,6 @@ class DataCleaner():
 
 
 
-
     
+
 
