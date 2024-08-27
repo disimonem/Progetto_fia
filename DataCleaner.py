@@ -3,12 +3,28 @@ import requests
 from bs4 import BeautifulSoup
 from bs4 import BeautifulSoup
 
+"""   
+DataCleaner class is used to clean the dataset
+"""
 class DataCleaner():
+
+    '''
+    Constructor
+        Parameters:
+            dataset_path: str
+                path to the dataset
+            url: str
+                url to the website containing the data
+    '''
     def __init__(self, dataset_path, url):
-        self.dataset = pd.read_parquet('challenge_campus_biomedico_2024.parquet')
+        self.dataset = pd.read_parquet(dataset_path)
         self.url = url
         self.codice_to_comune = {}
         self.comune_to_codice = {}
+
+    '''
+    This method is used to retrieve the data from the website
+    '''
 
     def retrieve_data(self):
         response = requests.get(self.url)
@@ -24,7 +40,14 @@ class DataCleaner():
                 self.codice_to_comune[codice] = comune
                 self.comune_to_codice[comune] = codice
 
-
+    '''
+    This method is used to fill the missing values in the 'codice_provincia_residenza' column
+    Parameters:
+        None
+    Returns:
+        dataset: pd.DataFrame
+            cleaned dataset
+    '''
     def riempimento_codice_provincia(self):
         self.dataset['provincia_residenza_upper'] = self.dataset['provincia_residenza'].str.upper()
         mask = self.dataset['provincia_residenza_upper'].isnull()
@@ -32,6 +55,14 @@ class DataCleaner():
         self.dataset.drop(columns=['provincia_residenza_upper'], inplace=True)
         return self.dataset
     
+    '''
+    This method is used to fill the missing values in the 'codice_provincia_erogazione' column
+        Parameters:
+            None
+        Returns:
+            dataset: pd.DataFrame
+                cleaned dataset         
+    '''
     def riempimento_codice_provincia_erogazione(self):
         self.dataset['provincia_residenza_upper']= self.dataset['provicia_erogazione'].str.upper()
         mask = self.dataset['codice_provincia_erogazione'].isnull()
@@ -39,20 +70,60 @@ class DataCleaner():
         self.dataset.drop(columns = ['provincia_residenza_upper'], inplace  = True)
         return self.dataset
     
+    '''
+    This method is used to fill the missing values in the 'codice_provincia_residenza' column
+    Parameters:
+        None
+    Returns:
+        dataset: pd.DataFrame
+            cleaned dataset
+    '''
+
     def drop_duplicate(self):
         if self.dataset.duplicated().any():
             self.dataset = self.dataset.drop_duplicates()
         return self.dataset
     
+    '''
+    This method is used to drop the rows with missing values in the 'data_disdetta' column
+    Parameters:
+        None
+        Returns:
+        dataset: pd.DataFrame
+            cleaned dataset
+            '''
     def drop_visit_cancellation(self):
         self.dataset =self.dataset[pd.isna(self.dataset['data_disdetta'])]
         return self.dataset
     
+
+    '''
+    This method is used to drop the column 'id_professionista_sanitario'
+    Parameters:
+        None
+    Returns:
+        dataset: pd.DataFrame
+            cleaned dataset
+    '''
+
     def drop_column_id_professionista_sanitario(self):
         self.dataset = self.dataset.drop(columns = ['id_professionista_sanitario'])
         return self.dataset
     
+    '''
+    This method is used to drop the column 'data_disdetta'
+    Parameters:
+        None
+    Returns:
+        dataset: pd.DataFrame
+            cleaned dataset
+    '''
+
+    def delete_column_date_null(self):
+        self.dataset = self.dataset.drop(columns = ['data_disdetta'])
+        return self.dataset
     
+
 
 
 
