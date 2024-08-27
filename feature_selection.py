@@ -204,6 +204,7 @@ def dataset_preprocessing(dataset):
     dataset = drop_columns_inio_e_fine_prestazione(dataset)
     dataset = quadrimesters(dataset)
     dataset = incremento_per_quadrimestre(dataset)
+    dataset = label(dataset)
     
     return dataset
 
@@ -220,6 +221,7 @@ def quadrimesters(dataset):
     dataset['data_erogazione'] = pd.to_datetime(dataset['data_erogazione'], utc=True, errors='coerce')
     dataset['anno']= dataset['data_erogazione'].dt.year
     dataset['quadrimestre']= dataset['data_erogazione'].dt.quarter
+
     return dataset
 
 
@@ -251,8 +253,7 @@ def incremento_per_quadrimestre(dataset):
     return dataset
 
 
-# Preprocess the dataset    
-dataset = dataset_preprocessing(dataset)
+    
 
 def label(dataset):
     """
@@ -274,7 +275,14 @@ def label(dataset):
 
     # Creare la colonna 'label' usando pd.cut()
     dataset['label'] = pd.cut(dataset['incremento_percentuale'], bins=bins, labels=labels)
+    dataset['label'] = dataset['label'].astype('object')
+
+    dataset.loc[dataset['incremento_percentuale'] == 0, 'label'] = 'nessun incremento'
 
     # Visualizzare il DataFrame con la nuova colonna 'label'
     print(dataset)
+    print("\n\n\n this is the label", dataset['label'])
     return dataset
+
+# Preprocess the dataset
+dataset = dataset_preprocessing(dataset)
