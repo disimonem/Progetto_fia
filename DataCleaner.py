@@ -50,8 +50,8 @@ class DataCleaner():
     '''
     def riempimento_codice_provincia(self):
         self.dataset['provincia_residenza_upper'] = self.dataset['provincia_residenza'].str.upper()
-        mask = self.dataset['provincia_residenza_upper'].isnull()
-        self.dataset.loc[mask, 'provincia_residenza_upper'] = self.dataset.loc[mask, 'provincia_residenza'].map(self.comune_to_codice)
+        mask = self.dataset['codice_provincia_residenza'].isnull()
+        self.dataset.loc[mask, 'codice_provincia_residenza'] = self.dataset.loc[mask, 'provincia_residenza_upper'].map(self.comune_to_codice)
         self.dataset.drop(columns=['provincia_residenza_upper'], inplace=True)
         return self.dataset
     
@@ -64,7 +64,7 @@ class DataCleaner():
                 cleaned dataset         
     '''
     def riempimento_codice_provincia_erogazione(self):
-        self.dataset['provincia_residenza_upper']= self.dataset['provicia_erogazione'].str.upper()
+        self.dataset['provincia_residenza_upper']= self.dataset['provincia_erogazione'].str.upper()
         mask = self.dataset['codice_provincia_erogazione'].isnull()
         self.dataset.loc[mask, 'codice_provincia_erogazione'] = self.dataset.loc[mask, 'provincia_residenza_upper'].map(self.comune_to_codice)
         self.dataset.drop(columns = ['provincia_residenza_upper'], inplace  = True)
@@ -123,9 +123,31 @@ class DataCleaner():
         self.dataset = self.dataset.drop(columns = ['data_disdetta'])
         return self.dataset
     
-
+    
+    def dataset(self):
+        return self.dataset
+    
+    def calculate_duration_of_visit(self):
+        self.dataset['ora_inizio_erogazione'] = pd.to_datetime(self.dataset['ora_inizio_erogazione'], utc = True)
+        self.dataset['ora_fine_erogazione'] = pd.to_datetime(self.dataset['ora_fine_erogazione'], utc = True)
+        self.dataset['durata_visita'] = (self.dataset['ora_fine_erogazione'] - self.dataset['ora_inizio_erogazione']).dt.total_seconds()/60
+        self.dataset.drop(columns = ['ora_inizio_erogazione', 'ora_fine_erogazione'], inplace = True)
+        return self.dataset
+    
+    def fill_duration_of_visit(self):
+        self.dataset['durata_visita'] = self.dataset['durata_visita'].fillna(self.dataset['durata_visita'].mean())
+        return self.dataset
+    
+    def calculate_age(self):
+        self.dataset['data_nascita']= pd.to_datetime(self.dataset['data_nascita'], utc = True)
+        today = pd.to_datetime('today', utc = True)
+        self.dataset['età'] = (today - self.dataset['data_nascita']).dt.days//365
+        self.dataset.drop(columns = ['data_nascita'], inplace = True)
+        return self.dataset
+    
 
 
 
     
+
 
