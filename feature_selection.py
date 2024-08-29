@@ -161,7 +161,7 @@ def plot_correlation_matrix(correlations, filename):
     plt.tight_layout()
     plt.savefig(filename)
 
-def eliminate_highly_correlated_columns(dataset, columns_to_exclude):
+def eliminate_highly_correlated_columns(dataset):
     """
     Eliminates columns that are highly correlated.
 
@@ -172,29 +172,18 @@ def eliminate_highly_correlated_columns(dataset, columns_to_exclude):
     Returns:
     DataFrame: The DataFrame with highly correlated columns removed.
     """
-    #print("\n\n\n this is the columns to exclude", columns_to_exclude)
-    dataset.drop(columns=columns_to_exclude, inplace=True)
-    return dataset
-
-def dataset_preprocessing(dataset):
-    """
-    Preprocesses the dataset by performing various cleaning and transformation steps.
-
-    Parameters:
-    dataset (DataFrame): The DataFrame containing the dataset.
-
-    Returns:
-    DataFrame: The preprocessed DataFrame.
-    """
-    dataset = data_cleaning.data_Cleaning(dataset, data_cleaning.comune_to_codice)  # Corrected function call
     categorical_columns = ['codice_tipologia_professionista_sanitario', 'provincia_residenza', 'provincia_erogazione', 'asl_residenza', 'comune_residenza', 'struttura_erogazione', 'regione_erogazione', 'regione_residenza', 'asl_erogazione', 'codice_tipologia_struttura_erogazione'] 
     correlation_matrix = compute_correlation_matrix(dataset, categorical_columns)
     plot_correlation_matrix(correlation_matrix, "correlation_matrix.png")
 
     high_correlation_threshold = 0.9
     columns_to_exclude = [col for col in correlation_matrix.columns if any(correlation_matrix[col].astype(float) > high_correlation_threshold)]
-    dataset = eliminate_highly_correlated_columns(dataset, columns_to_exclude)
+    #print("\n\n\n this is the columns to exclude", columns_to_exclude)
+    dataset.drop(columns=columns_to_exclude, inplace=True)
+    return dataset
 
+def dataset_preprocessing(dataset):
+    dataset = data_cleaning.data_Cleaning(dataset, data_cleaning.comune_to_codice)  # Corrected function cal
     dataset = drop_colomun_id_professionista_sanitario(dataset)
     dataset = drop_visit_cancellation(dataset)
     dataset = delete_column_date_null(dataset)
@@ -205,7 +194,10 @@ def dataset_preprocessing(dataset):
     dataset = quadrimesters(dataset)
     dataset = incremento_per_quadrimestre(dataset)
     dataset = label(dataset)
-    drop_columns(dataset)
+    dataset = eliminate_highly_correlated_columns(dataset)
+    dataset = drop_columns(dataset)
+    dataset = get_dummies(dataset)
+    dataset = fill_duration_of_visit(dataset)
 
     
     return dataset
@@ -296,12 +288,13 @@ def drop_columns(dataset):
     Returns:
     DataFrame: The DataFrame with unnecessary columns removed.
     """
-    columns_to_drop = ['id_prenotazione', 'id_paziente','data_contaatto']
+
+    columns_to_drop = ['id_prenotazione', 'id_paziente','data_contatto', 'codice_regione_residenza', 'codice_asl_residenza', 'codice_provincia_residenza', 'codice_comune_residenza', 'descrizione_attivita', 'tipologia_professionista_sanitario', 'tipologia_struttura_erogazione', 'data_erogazione']
     dataset.drop(columns=columns_to_drop, inplace=True)
     return dataset
 
 def get_dummies(dataset,threshold=0.01):
-    categories=['sesso','tipologia_servizio', 'data_contatto', 'codice_provincia_erogazione', 'codice_struttura_erogazione','tipologia_struttura_erogazione']
+    categories=['sesso','tipologia_servizio', 'codice_provincia_erogazione']
     for column in categories:
         # Calcolare la frequenza delle categorie
         counts = dataset[column].value_counts(normalize=True)
@@ -328,17 +321,5 @@ def fill_duration_of_visit(dataset):
     dataset['duration_of_visit'].fillna(mean_duration, inplace=True)
     return dataset
 
-def drop_forse(dataset):
-    """
-    Drops the 'forse' column from the dataset.
-
-    Parameters:
-    dataset (DataFrame): The DataFrame containing the dataset.
-
-    Returns:
-    DataFrame: The DataFrame with the something column removed.
-    """
-    dataset.drop(columns=['codice_asl_residenza','descrizione_attivita', 'codice_provincia_residenza', 'codice_comune_residenza'], inplace=True)
-    return dataset
 # Preprocess the dataset
 dataset = dataset_preprocessing(dataset)
