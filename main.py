@@ -8,14 +8,26 @@ def main():
     data_cleaner = DataCleaner.DataCleaner(dataset_path, url)
     data_cleaner.retrieve_data()
     data_cleaner.riempimento_codice_provincia()
+    data_cleaner.riempimento_codice_provincia_erogazione()
+    data_cleaner.drop_duplicate()
+    data_cleaner.drop_visit_cancellation()
+    data_cleaner.drop_column_id_professionista_sanitario()
+    data_cleaner.delete_column_date_null()
+    data_cleaner.calculate_duration_of_visit()
+    data_cleaner.fill_duration_of_visit()
+    data_cleaner.calculate_age()
     dataset = data_cleaner.dataset
+    print (dataset.info())
+    
+    
     feature_selection = FeatureSelection.FeatureSelection(dataset)
-    feature_selection.compute_correlation_matrix()
+
     feature_selection.eliminate_highly_correlated_columns()
-    feature_selection.plot_corrrelation_matrix()
-    extractor = FeatureExtractor.FeatureExtractor(dataset)
-    df_with_features = extractor.extract_features(dataset)
-    print(df_with_features.head())
+    print (dataset.info())
+    
+    #extractor = FeatureExtractor.FeatureExtractor(dataset)
+   # df_with_features = extractor.extract_features()
+    
     
     
 

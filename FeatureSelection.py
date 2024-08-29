@@ -42,13 +42,13 @@ class FeatureSelection():
         Returns:
         correlations: pd.DataFrame
             correlation matrix
-'''
-    def compute_correlation_matrix(self):
-        correlations = pd.DataFrame(index = self.dataset.columns, columns = self.dataset.columns)
-        for col1 in self.dataset.columns:
-            for col2 in self.dataset.columns:
+    '''
+    def compute_correlation_matrix(self, columns):
+        correlations = pd.DataFrame(index = columns, columns = columns) 
+        for col1 in columns:
+            for col2 in columns:
                 if col1 != col2:
-                    correlations.loc[col1, col2] = cramer_v(self.dataset[col1], self.dataset[col2])
+                        correlations.loc[col1, col2] = cramer_v(self.dataset[col1], self.dataset[col2])
                 else:
                     correlations.loc[col1, col2] = 1
         return correlations
@@ -60,13 +60,6 @@ class FeatureSelection():
         Returns:
         None
     '''
-    def plot_corrrelation_matrix(self):
-        plt.figure(figsize=(16,12))
-        sns.heatmap(self.compute_correlation_matrix(), annot = True, cmap="coolwarm", fmt = '.2f', linewidths=0.5, square=True)
-        plt.xticks(rotation = 45, ha = "right", fontsize = 12)
-        plt.yticks(fontsize = 12)
-        plt.tight_layout()
-        plt.savefig('correlation_matrix.png')
     
     '''
     This method is used to eliminate the highly correlated columns
@@ -77,13 +70,21 @@ class FeatureSelection():
             dataset: pd.DataFrame
                 dataset without the highly correlated columns
     '''
-    def eliminate_highly_correlated_columns(self):
-        categorical_columns = ['codice_tipologia_professionista_sanitario', 'provincia_residenza', 'provincia_erogazione', 'asl_residenza', 'comune_residenza', 'struttura_erogazione', 'regione_erogazione', 'regione_residenza', 'asl_erogazione', 'codice_tipologia_struttura_erogazione']
-        correlation_matrix = self.compute_correlation_matrix(self.dataset, categorical_columns)
-        self.plot_correlation_matrix(correlation_matrix, "correlation_matrix.png")
+    def eliminate_highly_correlated_columns(self, high_correlation_threshold=0.9):
+        """ Eliminate columns with high correlation. """
+        categorical_columns = ['codice_tipologia_professionista_sanitario', 'provincia_residenza', 
+                               'provincia_erogazione', 'asl_residenza', 'comune_residenza', 
+                               'struttura_erogazione', 'regione_erogazione', 'regione_residenza', 
+                               'asl_erogazione', 'codice_tipologia_struttura_erogazione']
+        correlation_matrix = self.compute_correlation_matrix(categorical_columns)
  
-        high_correlation_threshold = 0.9
-        columns_to_exclude = [col for col in correlation_matrix.columns if any(correlation_matrix[col].astype(float) > high_correlation_threshold)]
-    #print("\n\n\n this is the columns to exclude", columns_to_exclude)
+        columns_to_exclude = [col for col in correlation_matrix.columns 
+                              if any(correlation_matrix[col].astype(float) > high_correlation_threshold)]
+        print("Columns to exclude:", columns_to_exclude)
         self.dataset.drop(columns=columns_to_exclude, inplace=True)
         return self.dataset
+    
+    def plot_correlation_matrix(self):
+        correlation_matrix = self.compute_correlation_matrix()
+        sns.heatmap(correlation_matrix, annot=True)
+        plt.show()
