@@ -189,7 +189,7 @@ def dataset_preprocessing(dataset):
     dataset = data_cleaning.data_Cleaning(dataset, data_cleaning.comune_to_codice)  # Corrected function call
     categorical_columns = ['codice_tipologia_professionista_sanitario', 'provincia_residenza', 'provincia_erogazione', 'asl_residenza', 'comune_residenza', 'struttura_erogazione', 'regione_erogazione', 'regione_residenza', 'asl_erogazione', 'codice_tipologia_struttura_erogazione'] 
     correlation_matrix = compute_correlation_matrix(dataset, categorical_columns)
-    plot_correlation_matrix(correlation_matrix, "correlation_matrix.png")
+    #plot_correlation_matrix(correlation_matrix, "correlation_matrix.png")
 
     high_correlation_threshold = 0.9
     columns_to_exclude = [col for col in correlation_matrix.columns if any(correlation_matrix[col].astype(float) > high_correlation_threshold)]
