@@ -5,6 +5,7 @@ from sklearn.ensemble import IsolationForest
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
 """   
 DataCleaner class is used to clean the dataset
 """
@@ -15,12 +16,10 @@ class DataCleaner():
         Parameters:
             dataset_path: str
                 path to the dataset
-            url: str
-                url to the website containing the data
+           
     '''
-    def __init__(self, dataset_path, url):
-        self.dataset = pd.read_parquet(dataset_path)
-        self.url = url
+    def __init__(self, dataset):
+        self.dataset=dataset
         self.codice_to_comune = {}
         self.comune_to_codice = {}
 
@@ -29,7 +28,8 @@ class DataCleaner():
     '''
 
     def retrieve_data(self):
-        response = requests.get(self.url)
+        url = 'https://www1.agenziaentrate.gov.it/servizi/codici/ricerca/VisualizzaTabella.php?ArcName=00T2'
+        response = requests.get(url)
         html_content = response.text
         soup = BeautifulSoup(html_content, 'html.parser')
 
@@ -125,27 +125,11 @@ class DataCleaner():
         self.dataset = self.dataset.drop(columns = ['data_disdetta'])
         return self.dataset
     
-    
-    def dataset(self):
-        return self.dataset
-    
-    def calculate_duration_of_visit(self):
-        self.dataset['ora_inizio_erogazione'] = pd.to_datetime(self.dataset['ora_inizio_erogazione'], utc = True)
-        self.dataset['ora_fine_erogazione'] = pd.to_datetime(self.dataset['ora_fine_erogazione'], utc = True)
-        self.dataset['durata_visita'] = (self.dataset['ora_fine_erogazione'] - self.dataset['ora_inizio_erogazione']).dt.total_seconds()/60
-        self.dataset.drop(columns = ['ora_inizio_erogazione', 'ora_fine_erogazione'], inplace = True)
-        return self.dataset
-    
     def fill_duration_of_visit(self):
         self.dataset['durata_visita'] = self.dataset['durata_visita'].fillna(self.dataset['durata_visita'].mean())
         return self.dataset
-    
-    def calculate_age(self):
-        self.dataset['data_nascita']= pd.to_datetime(self.dataset['data_nascita'], utc = True)
-        today = pd.to_datetime('today', utc = True)
-        self.dataset['età'] = (today - self.dataset['data_nascita']).dt.days//365
-        self.dataset.drop(columns = ['data_nascita'], inplace = True)
-        return self.dataset
+   
+        
     
     """
     Identifica e rimuove outliers da 'età' e 'duration_of_visit' usando l'Isolation Forest.
