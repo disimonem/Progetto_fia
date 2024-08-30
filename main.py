@@ -16,6 +16,7 @@ def main():
     data_cleaner.calculate_duration_of_visit()
     data_cleaner.fill_duration_of_visit()
     data_cleaner.calculate_age()
+    data_cleaner.update_dataset_with_outliers()
     dataset = data_cleaner.dataset
     print (dataset.info())
     
@@ -25,9 +26,12 @@ def main():
     feature_selection.eliminate_highly_correlated_columns()
     print (dataset.info())
     
-    #extractor = FeatureExtractor.FeatureExtractor(dataset)
-   # df_with_features = extractor.extract_features()
-    
+    dataset = feature_selection.dataset
+
+    extractor = FeatureExtractor.FeatureExtractor(dataset)
+    df_with_features = extractor.extract_features()
+
+    print (df_with_features.head(400000))
     
     
 

@@ -1,7 +1,9 @@
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-from bs4 import BeautifulSoup
+from sklearn.ensemble import IsolationForest
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 """   
 DataCleaner class is used to clean the dataset
@@ -145,9 +147,76 @@ class DataCleaner():
         self.dataset.drop(columns = ['data_nascita'], inplace = True)
         return self.dataset
     
+    """
+    Identifica e rimuove outliers da 'età' e 'duration_of_visit' usando l'Isolation Forest.
+    Aggiunge anche le righe con età > 100 come outliers.
 
+    Parameters:
+    dataset (DataFrame): Il DataFrame contenente il dataset.
+    contamination (float): La proporzione di outliers nel dataset.
+    n_estimators (int): Il numero di base estimatori nell'ensemble.
+    max_samples (int o float o 'auto'): Il numero di campioni da estrarre da X per allenare ciascun base estimatore.
 
-
+    Returns:
+    DataFrame: Il DataFrame aggiornato senza outliers e con età <= 100.
+    """
     
+    def update_dataset_with_outliers(self, contamination=0.05, n_estimators=100, max_samples='auto'):
+    
+        # Seleziona solo le colonne 'età' e 'duration_of_visit'
+        numeric_data = self.dataset[['età', 'durata_visita']]
+    
+        # Modello Isolation Forest
+        iso_forest = IsolationForest(contamination=contamination, n_estimators=n_estimators, max_samples=max_samples, random_state=42)
+    
+        # Fitting del modello
+        outliers = iso_forest.fit_predict(numeric_data)
+    
+        # Aggiungi colonne per i punteggi di anomalie e decisioni
+        self.dataset['anomaly_score'] = iso_forest.decision_function(numeric_data)
+        self.dataset['outlier'] = outliers
+
+        # Aggiungi un controllo per le righe con età > 100
+        self.dataset.loc[self.dataset['età'] > 100, 'outlier'] = -1  # Segna come outlier se età > 100
+
+        # Filtra i dati normali
+        dataset_cleaned = self.dataset[self.dataset['outlier'] == 1]
+        plt.figure(figsize=(14, 6))
+
+        plt.subplot(1, 2, 1)
+        sns.scatterplot(x=self.dataset['età'], y=self.dataset['durata_visita'], hue=self.dataset['outlier'], palette='viridis', legend='full')
+        plt.title('Scatter Plot - Dati Originali')
+        plt.xlabel('Età')
+        plt.ylabel('Durata Visita')
+
+        plt.subplot(1, 2, 2)
+        sns.scatterplot(x=dataset_cleaned['età'], y=dataset_cleaned['durata_visita'], hue=dataset_cleaned['outlier'], palette='viridis', legend='full')
+        plt.title('Scatter Plot - Dati Puliti')
+        plt.xlabel('Età')
+        plt.ylabel('Durata Visita')
+
+        plt.tight_layout()
+        plt.show()
+
+        plt.figure(figsize=(14, 6))
+        plt.subplot(1, 2, 1)
+        sns.histplot(self.dataset['outlier'], bins=3, kde=False)
+        plt.title('Distribuzione Classificazione - Dati Originali')
+        plt.xlabel('Classe')
+        plt.ylabel('Frequenza')
+        plt.xticks(ticks=[-1, 1], labels=['Outlier', 'Normale'])
+
+        plt.subplot(1, 2, 2)
+        sns.histplot(dataset_cleaned['outlier'], bins=3, kde=False)
+        plt.title('Distribuzione Classificazione - Dati Puliti')
+        plt.xlabel('Classe')
+        plt.ylabel('Frequenza')
+        plt.xticks(ticks=[-1, 1], labels=['Outlier', 'Normale'])
+
+        plt.tight_layout()
+        plt.show()
+
+        self.dataset = self.dataset.drop(columns=['anomaly_score', 'outlier'])
+        return dataset_cleaned
 
 

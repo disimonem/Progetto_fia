@@ -1,5 +1,4 @@
 import pandas as pd 
-import DataCleaner
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -80,7 +79,6 @@ class FeatureSelection():
  
         columns_to_exclude = [col for col in correlation_matrix.columns 
                               if any(correlation_matrix[col].astype(float) > high_correlation_threshold)]
-        print("Columns to exclude:", columns_to_exclude)
         self.dataset.drop(columns=columns_to_exclude, inplace=True)
         return self.dataset
     
@@ -88,3 +86,6 @@ class FeatureSelection():
         correlation_matrix = self.compute_correlation_matrix()
         sns.heatmap(correlation_matrix, annot=True)
         plt.show()
+
+    def dataset(self):
+        return self.dataset
