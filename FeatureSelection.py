@@ -5,78 +5,92 @@ import matplotlib.pyplot as plt
 from scipy.stats import chi2_contingency
 
 class FeatureSelection:
-
     def __init__(self, dataset):
+        """
+        Initializes the FeatureSelection: with a dataset.
+
+        Parameters:
+        dataset (DataFrame): The DataFrame containing the dataset.
+        """
         self.dataset = dataset
 
-    def compute_correlation_matrix(self, columns):
-        correlations = pd.DataFrame(index=columns, columns=columns)
-        for col1 in columns:
-            for col2 in columns:
-                if col1 != col2:
-                    correlations.loc[col1, col2] = self.cramer_v(self.dataset[col1], self.dataset[col2])
-                else:
-                    correlations.loc[col1, col2] = 1
-        return correlations
-
-    def plot_correlation_matrix(self):
-        categorical_columns = ['codice_tipologia_professionista_sanitario', 'provincia_residenza',
-                               'provincia_erogazione', 'asl_residenza', 'comune_residenza',
-                               'struttura_erogazione', 'regione_erogazione', 'regione_residenza',
-                               'asl_erogazione', 'codice_tipologia_struttura_erogazione']
-        correlation_matrix = self.compute_correlation_matrix(categorical_columns)
-        sns.heatmap(correlation_matrix.astype(float), annot=True)
-        plt.show()
 
     def cramer_v(self, x, y):
+        """Calculates Cramér's V statistic for categorical-categorical association."""
         contingency = pd.crosstab(x, y)
         chi2, _, _, _ = chi2_contingency(contingency)
         n = contingency.sum().sum()
         min_dim = min(contingency.shape) - 1
         return np.sqrt(chi2 / (n * min_dim))
 
-    def eliminate_highly_correlated_columns(self, columns_to_exclude):
+    def compute_correlation_matrix(self, columns):
+        """Computes the correlation matrix for categorical columns."""
+        correlations = pd.DataFrame(index=columns, columns=columns)
+        for col1 in columns:
+            for col2 in columns:
+                if col1 != col2:
+                    correlations.loc[col1, col2] = self.cramer_v(self.dataset[col1], self.dataset[col2])
+                else:
+                    correlations.loc[col1, col2] = 1.0
+        return correlations
+
+    def plot_correlation_matrix(self, correlations, filename):
+        """Plots the correlation matrix and saves it as an image file."""
+        plt.figure(figsize=(16, 12))
+        sns.heatmap(correlations.astype(float), annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5, square=True)
+        plt.xticks(rotation=45, ha="right", fontsize=12)
+        plt.yticks(fontsize=12)
+        plt.tight_layout()
+        plt.savefig(filename)
+
+    def eliminate_highly_correlated_columns(self):
+        """Eliminates columns that are highly correlated."""
+        categorical_columns = [
+            'codice_tipologia_professionista_sanitario', 'provincia_residenza', 
+            'provincia_erogazione', 'asl_residenza', 'comune_residenza', 
+            'struttura_erogazione', 'regione_erogazione', 'regione_residenza', 
+            'asl_erogazione', 'codice_tipologia_struttura_erogazione'
+        ]
+        correlation_matrix = self.compute_correlation_matrix(categorical_columns)
+        self.plot_correlation_matrix(correlation_matrix, "correlation_matrix.png")
+
+        high_correlation_threshold = 0.9
+        columns_to_exclude = [col for col in correlation_matrix.columns if any(correlation_matrix[col].astype(float) > high_correlation_threshold)]
         self.dataset.drop(columns=columns_to_exclude, inplace=True)
+
+    
+    def drop_columns(self):
+        """Drops columns that are not needed for the analysis."""
+        columns_to_drop = ['id_prenotazione', 'id_paziente', 'data_contatto', 'codice_regione_residenza', 
+                           'codice_asl_residenza', 'codice_provincia_residenza', 'codice_comune_residenza', 
+                           'descrizione_attivita', 'tipologia_professionista_sanitario', 
+                           'tipologia_struttura_erogazione', 'data_erogazione']
+        self.dataset.drop(columns=columns_to_drop, inplace=True)
+
+'''def preprocess(self):
+        """Executes the full preprocessing pipeline."""
+        self.drop_column_id_professionista_sanitario()
+        self.drop_visit_cancellation()
+        self.delete_column_date_null()
+        self.drop_duplicate()
+        self.duration_of_visit()
+        self.calculate_age()
+        self.drop_columns_inio_e_fine_prestazione()
+        self.quadrimesters()
+        self.incremento_per_quadrimestre()
+        self.label()
+        self.eliminate_highly_correlated_columns()
+        self.drop_columns()
+        self.get_dummies()
+        self.fill_duration_of_visit()
         return self.dataset
 
-    def remove_columns_with_unique_correlation(self, columns_pairs):
-        '''
-        This method removes columns with unique correlation
-        
-        Args:
-            columns_pairs: List of tuples containing the code-description column pairs to be compared.
+# Load the dataset from a parquet file
+dataset = pd.read_parquet('challenge_campus_biomedico_2024.parquet')
 
-        Returns:
-            The DataFrame with removed columns
-        '''
-        pairs_removed = []
+# Initialize the FeatureSelection: with the dataset
+data_preprocessor = FeatureSelection:(dataset)
 
-        for code, description in columns_pairs:
-            if code in self.dataset.columns and description in self.dataset.columns:
-                code_groups = self.dataset.groupby(code)[description].nunique()
-                description_groups = self.dataset.groupby(description)[code].nunique()
-
-                # Print details of corrections if needed
-                self.print_details_corrections(code, description, code_groups, description_groups)
-
-                unique_correlation_code_description = all(code_groups <= 1)
-                unique_correlation_description_code = all(description_groups <= 1)
-
-                if unique_correlation_code_description and unique_correlation_description_code:
-                    self.dataset.drop(columns=[code], inplace=True)
-                    print(f'Unique correlation between {code} and {description}. Column {code} removed.')
-                    pairs_removed.append((code, description))
-            else:
-                print(f'Columns {code} or {description} not found in the dataframe.')
-                pairs_removed.append((code, description))
-
-        # Update the list of columns pairs removing the ones that have been removed
-        columns_pairs_updated = [pair for pair in columns_pairs if pair not in pairs_removed]
-        return self.dataset, columns_pairs_updated
-
-    def print_details_corrections(self, code, description, code_groups, description_groups):
-        # Define this method if you need to print details for debugging
-        print(f'Code column {code}:')
-        print(code_groups)
-        print(f'Description column {description}:')
-        print(description_groups)
+# Preprocess the dataset
+cleaned_dataset = data_preprocessor.preprocess()'''
+    
