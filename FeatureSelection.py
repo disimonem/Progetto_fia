@@ -57,6 +57,7 @@ class FeatureSelection:
         high_correlation_threshold = 0.9
         columns_to_exclude = [col for col in correlation_matrix.columns if any(correlation_matrix[col].astype(float) > high_correlation_threshold)]
         self.dataset.drop(columns=columns_to_exclude, inplace=True)
+        return self.dataset
 
     
     def drop_columns(self):
@@ -65,32 +66,7 @@ class FeatureSelection:
                            'codice_asl_residenza', 'codice_provincia_residenza', 'codice_comune_residenza', 
                            'descrizione_attivita', 'tipologia_professionista_sanitario', 
                            'tipologia_struttura_erogazione', 'data_erogazione']
-        self.dataset.drop(columns=columns_to_drop, inplace=True)
-
-'''def preprocess(self):
-        """Executes the full preprocessing pipeline."""
-        self.drop_column_id_professionista_sanitario()
-        self.drop_visit_cancellation()
-        self.delete_column_date_null()
-        self.drop_duplicate()
-        self.duration_of_visit()
-        self.calculate_age()
-        self.drop_columns_inio_e_fine_prestazione()
-        self.quadrimesters()
-        self.incremento_per_quadrimestre()
-        self.label()
-        self.eliminate_highly_correlated_columns()
-        self.drop_columns()
-        self.get_dummies()
-        self.fill_duration_of_visit()
+        self.dataset.drop(columns=columns_to_drop)
         return self.dataset
 
-# Load the dataset from a parquet file
-dataset = pd.read_parquet('challenge_campus_biomedico_2024.parquet')
 
-# Initialize the FeatureSelection: with the dataset
-data_preprocessor = FeatureSelection:(dataset)
-
-# Preprocess the dataset
-cleaned_dataset = data_preprocessor.preprocess()'''
-    

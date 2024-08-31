@@ -38,6 +38,7 @@ class DataCleaner:
         df.loc[mask, 'codice_provincia_residenza'] = df.loc[mask, 'provincia_residenza_upper'].map(comune_to_codice)
         df.drop(columns=['provincia_residenza_upper'], inplace=True)
         self.dataset = df
+        return self.dataset
 
     def riempimento_codice_provincia_erogazione(self, comune_to_codice):
         if 'provincia_erogazione' not in self.dataset.columns or 'codice_provincia_erogazione' not in self.dataset.columns:
@@ -49,33 +50,37 @@ class DataCleaner:
         df.loc[mask, 'codice_provincia_erogazione'] = df.loc[mask, 'provincia_erogazione_upper'].map(comune_to_codice)
         df.drop(columns=['provincia_erogazione_upper'], inplace=True)
         self.dataset = df
+        return self.dataset
 
     def drop_duplicate(self):
         if not isinstance(self.dataset, pd.DataFrame):
             raise TypeError("Expected self.dataset to be a DataFrame.")
         self.dataset = self.dataset.drop_duplicates()
+        return self.dataset
 
     def drop_visit_cancellation(self):
         if 'data_disdetta' not in self.dataset.columns:
             raise KeyError("Colonna 'data_disdetta' non trovata nel dataset.")
         self.dataset = self.dataset[pd.isna(self.dataset['data_disdetta'])]
+        return self.dataset
 
     def fill_duration_of_visit(self):
         if 'duration_of_visit' not in self.dataset.columns:
             raise KeyError("Colonna 'duration_of_visit' non trovata nel dataset.")
         self.dataset['duration_of_visit'] = self.dataset['duration_of_visit'].fillna(self.dataset['duration_of_visit'].mean())
+        return self.dataset
 
     def drop_column_id_professionista_sanitario(self):
         if 'id_professionista_sanitario' in self.dataset.columns:
-            self.dataset.drop(columns=['id_professionista_sanitario'], inplace=True)
+            return self.dataset.drop(columns=['id_professionista_sanitario'], inplace=True)
 
     def delete_column_date_disdetta(self):
-        if 'data_disdetta' in self.dataset.columns:
-            self.dataset.drop(columns=['data_disdetta'], inplace=True)
-
+        return self.dataset.drop('data_disdetta', axis=1)
+   
     def drop_columns_inio_e_fine_prestazione(self):
-        if 'ora_inizio_erogazione' in self.dataset.columns and 'ora_fine_erogazione' in self.dataset.columns:
-            self.dataset.drop(columns=['ora_inizio_erogazione', 'ora_fine_erogazione'], inplace=True)
+        return self.dataset.drop(columns=['ora_inizio_erogazione', 'ora_fine_erogazione'])
+        
+
 
     def update_dataset_with_outliers(self, contamination=0.05, n_estimators=100, max_samples='auto'):
         if not all(col in self.dataset.columns for col in ['età', 'duration_of_visit']):
