@@ -14,6 +14,9 @@ class FeatureSelection:
         """
         self.dataset = dataset
 
+    def get_dataset(self):
+        return self.dataset
+
 
     def cramer_v(self, x, y):
         """Calculates Cramér's V statistic for categorical-categorical association."""
@@ -44,29 +47,47 @@ class FeatureSelection:
         plt.savefig(filename)
 
     def eliminate_highly_correlated_columns(self):
-        """Eliminates columns that are highly correlated."""
-        categorical_columns = [
-            'codice_tipologia_professionista_sanitario', 'provincia_residenza', 
-            'provincia_erogazione', 'asl_residenza', 'comune_residenza', 
-            'struttura_erogazione', 'regione_erogazione', 'regione_residenza', 
-            'asl_erogazione', 'codice_tipologia_struttura_erogazione'
-        ]
-        correlation_matrix = self.compute_correlation_matrix(categorical_columns)
-        self.plot_correlation_matrix(correlation_matrix, "correlation_matrix.png")
+      """Eliminates columns that are highly correlated."""
+      categorical_columns = [
+          'codice_tipologia_professionista_sanitario', 'provincia_residenza',
+          'provincia_erogazione', 'asl_residenza', 'comune_residenza',
+          'struttura_erogazione', 'regione_erogazione', 'regione_residenza',
+          'asl_erogazione', 'codice_tipologia_struttura_erogazione'
+      ]
 
-        high_correlation_threshold = 0.9
-        columns_to_exclude = [col for col in correlation_matrix.columns if any(correlation_matrix[col].astype(float) > high_correlation_threshold)]
-        self.dataset.drop(columns=columns_to_exclude, inplace=True)
-        return self.dataset
+      # Compute the correlation matrix
+      correlation_matrix = self.compute_correlation_matrix(categorical_columns)
 
-    
-    def drop_columns(self):
-        """Drops columns that are not needed for the analysis."""
-        columns_to_drop = ['id_prenotazione', 'id_paziente', 'data_contatto', 'codice_regione_residenza', 
-                           'codice_asl_residenza', 'codice_provincia_residenza', 'codice_comune_residenza', 
-                           'descrizione_attivita', 'tipologia_professionista_sanitario', 
-                           'tipologia_struttura_erogazione', 'data_erogazione']
-        self.dataset.drop(columns=columns_to_drop)
-        return self.dataset
+      # Plot and save the correlation matrix
+      self.plot_correlation_matrix(correlation_matrix, "correlation_matrix.png")
 
+      # Convert correlation matrix to numeric and replace NaNs with 0
+      correlation_matrix = correlation_matrix.astype(float).fillna(0)
 
+      # Define the threshold for high correlation
+      high_correlation_threshold = 0.9
+
+      # Initialize list to hold columns to drop
+      columns_to_exclude = set()
+
+      # Iterate over each column to find highly correlated columns
+      for col in correlation_matrix.columns:
+          high_correlation_cols = correlation_matrix.index[
+              correlation_matrix[col] > high_correlation_threshold
+          ].tolist()
+
+          # Remove self-correlation (1.0) from the list
+          high_correlation_cols = [x for x in high_correlation_cols if x != col]
+
+          # Add columns to the exclusion set
+          columns_to_exclude.update(high_correlation_cols)
+
+      # Convert set to list
+      columns_to_exclude = list(columns_to_exclude)
+
+      print(f"Colonne da escludere per alta correlazione: {columns_to_exclude}")
+
+      # Drop the highly correlated columns from the dataset
+      self.dataset.drop(columns=columns_to_exclude, inplace=True)
+
+      print(f"Colonne rimanenti dopo l'esclusione: {self.dataset.columns.tolist()}")

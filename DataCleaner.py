@@ -9,6 +9,9 @@ class DataCleaner:
     def __init__(self, dataset):
         self.dataset = dataset
 
+    def get_dataset(self):
+        return self.dataset
+
     def fetch_province_code_data(self, url):
         response = requests.get(url)
         html_content = response.text
@@ -29,72 +32,53 @@ class DataCleaner:
         return codice_to_comune, comune_to_codice
 
     def riempimento_codice_provincia(self, comune_to_codice):
-        if 'provincia_residenza' not in self.dataset.columns or 'codice_provincia_residenza' not in self.dataset.columns:
-            raise KeyError("Le colonne 'provincia_residenza' o 'codice_provincia_residenza' non sono presenti nel dataset.")
-        
         df = self.dataset.copy()
         df['provincia_residenza_upper'] = df['provincia_residenza'].str.upper()
         mask = df['codice_provincia_residenza'].isnull()
         df.loc[mask, 'codice_provincia_residenza'] = df.loc[mask, 'provincia_residenza_upper'].map(comune_to_codice)
         df.drop(columns=['provincia_residenza_upper'], inplace=True)
         self.dataset = df
-        return self.dataset
 
     def riempimento_codice_provincia_erogazione(self, comune_to_codice):
-        if 'provincia_erogazione' not in self.dataset.columns or 'codice_provincia_erogazione' not in self.dataset.columns:
-            raise KeyError("Le colonne 'provincia_erogazione' o 'codice_provincia_erogazione' non sono presenti nel dataset.")
-        
         df = self.dataset.copy()
         df['provincia_erogazione_upper'] = df['provincia_erogazione'].str.upper()
         mask = df['codice_provincia_erogazione'].isnull()
         df.loc[mask, 'codice_provincia_erogazione'] = df.loc[mask, 'provincia_erogazione_upper'].map(comune_to_codice)
         df.drop(columns=['provincia_erogazione_upper'], inplace=True)
         self.dataset = df
-        return self.dataset
 
     def drop_duplicate(self):
-        if not isinstance(self.dataset, pd.DataFrame):
-            raise TypeError("Expected self.dataset to be a DataFrame.")
         self.dataset = self.dataset.drop_duplicates()
-        return self.dataset
 
     def drop_visit_cancellation(self):
-        if 'data_disdetta' not in self.dataset.columns:
-            raise KeyError("Colonna 'data_disdetta' non trovata nel dataset.")
         self.dataset = self.dataset[pd.isna(self.dataset['data_disdetta'])]
-        return self.dataset
 
     def fill_duration_of_visit(self):
-        if 'duration_of_visit' not in self.dataset.columns:
-            raise KeyError("Colonna 'duration_of_visit' non trovata nel dataset.")
         self.dataset['duration_of_visit'] = self.dataset['duration_of_visit'].fillna(self.dataset['duration_of_visit'].mean())
-        return self.dataset
 
     def drop_column_id_professionista_sanitario(self):
-        if 'id_professionista_sanitario' in self.dataset.columns:
-            return self.dataset.drop(columns=['id_professionista_sanitario'], inplace=True)
+         self.dataset.drop(columns=['id_professionista_sanitario'], inplace=True)
 
     def delete_column_date_disdetta(self):
-        return self.dataset.drop('data_disdetta', axis=1)
-   
+        self.dataset.drop('data_disdetta', axis=1, inplace=True)
+
     def drop_columns_inio_e_fine_prestazione(self):
-        return self.dataset.drop(columns=['ora_inizio_erogazione', 'ora_fine_erogazione'])
-        
+      """Rimuove le colonne 'ora_inizio_erogazione' e 'ora_fine_erogazione' dal DataFrame esistente."""
+      self.dataset.drop(columns=['ora_inizio_erogazione', 'ora_fine_erogazione'], inplace=True)
+
 
 
     def update_dataset_with_outliers(self, contamination=0.05, n_estimators=100, max_samples='auto'):
-        if not all(col in self.dataset.columns for col in ['età', 'duration_of_visit']):
-            raise KeyError("Le colonne 'età' o 'duration_of_visit' non sono presenti nel dataset.")
-        
+
         numeric_data = self.dataset[['età', 'duration_of_visit']]
         iso_forest = IsolationForest(contamination=contamination, n_estimators=n_estimators, max_samples=max_samples, random_state=42)
         outliers = iso_forest.fit_predict(numeric_data)
-        
+
         self.dataset['anomaly_score'] = iso_forest.decision_function(numeric_data)
         self.dataset['outlier'] = outliers
 
         self.dataset.loc[self.dataset['età'] > 100, 'outlier'] = -1
-        
+
         original_dataset = self.dataset.copy()
         cleaned_dataset = self.dataset[self.dataset['outlier'] == 1].copy()
 
@@ -133,11 +117,30 @@ class DataCleaner:
         plt.show()
 
         self.dataset = cleaned_dataset.drop(columns=['anomaly_score', 'outlier'])
-        return self.dataset
 
     def clean_data(self, comune_to_codice):
         self.drop_duplicate()
         self.drop_visit_cancellation()
         self.riempimento_codice_provincia(comune_to_codice)
         self.riempimento_codice_provincia_erogazione(comune_to_codice)
-        return self.dataset
+   
+    def drop_columns(self):
+        """Drops columns that are not needed for the analysis."""
+        # Lista delle colonne da eliminare
+        columns_to_drop = [
+            'id_prenotazione', 'id_paziente', 'data_contatto',
+            'codice_regione_residenza', 'codice_asl_residenza',
+            'codice_provincia_residenza', 'codice_comune_residenza',
+            'descrizione_attivita', 'tipologia_professionista_sanitario',
+            'tipologia_struttura_erogazione', 'data_erogazione','id_professionista_sanitario', 'codice_tipologia_professionista_sanitario'
+        ]
+
+        # Verifica delle colonne esistenti nel dataset
+        existing_columns = [col for col in columns_to_drop if col in self.dataset.columns]
+        missing_columns = [col for col in columns_to_drop if col not in self.dataset.columns]
+
+        print(f"Colonne esistenti che verranno eliminate: {existing_columns}")
+        print(f"Colonne mancanti che non possono essere eliminate: {missing_columns}")
+
+        # Elimina le colonne presenti nel DataFrame
+        self.dataset.drop(columns=existing_columns, inplace=True, errors='ignore')
