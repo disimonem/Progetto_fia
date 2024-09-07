@@ -7,7 +7,6 @@ from FeatureExtractor import FeatureExtractor
 from FeatureSelection import FeatureSelection
 from ClusteringAnalyzer import ClusteringAnalyzer
 
-
 class CustomPipeline:
     def __init__(self):
         """
@@ -100,16 +99,13 @@ class CustomPipeline:
         y_true_column (str, optional): Nome della colonna che contiene le etichette reali (per il Purity Score).
         """
         # 1. Prepara il dataset eliminando colonne non necessarie
-        X = df.drop(columns=['non_relevant_column'], errors='ignore')
-
-        # 2. Esegui fit e trasformazione della pipeline
-        self.fit_transform(X)
-
+        X_transformed = self.fit_transform(df)
+        
         # 3. Analizza i cluster
-        self.analyze_clusters(X)
+        self.analyze_clusters(X_transformed)
 
         # 4. Se sono presenti le etichette reali, analizza il Purity Score
         if y_true_column and y_true_column in df.columns:
             y_true = df[y_true_column]
-            self.analyze_purity(X, y_true)
+            self.analyze_purity(X_transformed, y_true)
 

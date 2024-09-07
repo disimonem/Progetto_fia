@@ -104,7 +104,7 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
             raise TypeError("Expected self.dataset to be a DataFrame")
         required_columns = ['tipologia_servizio', 'id_prenotazione', 'anno', 'quadrimestre']
         if not all(col in self.dataset.columns for col in required_columns):
-            raise KeyError(f"Dataset must contain columns: {required_columns}")
+           raise KeyError(f"Dataset must contain columns: {required_columns}")
 
         conteggio_per_quadrimestre = self.dataset[self.dataset['tipologia_servizio'] == 'Teleassistenza'].groupby(
             ['generazione', 'codice_regione_erogazione', 'anno', 'quadrimestre']).size().reset_index(name='numero_teleassistenze')
@@ -114,9 +114,9 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
         conteggio_per_quadrimestre['incremento_percentuale'] = (conteggio_per_quadrimestre['incremento'] / conteggio_per_quadrimestre.groupby(['generazione', 'codice_regione_erogazione', 'quadrimestre'])['numero_teleassistenze'].shift(1).fillna(1)) * 100
 
         self.dataset = self.dataset.merge(conteggio_per_quadrimestre[['generazione', 'codice_regione_erogazione', 'anno', 'quadrimestre', 'incremento', 'incremento_percentuale']],
-                                          on=['generazione', 'codice_regione_erogazione', 'anno', 'quadrimestre'],
+                                         on=['generazione', 'codice_regione_erogazione', 'anno', 'quadrimestre'],
                                           how='left')
-
+    
     def label(self):
         if not isinstance(self.dataset, pd.DataFrame):
             raise TypeError("Expected self.dataset to be a DataFrame")
